@@ -1,0 +1,12 @@
+# samba-ad
+
+Active Directory using Samba for demo/test purposes.
+
+Inspired and based on https://schneide.blog/2022/06/27/running-a-containerized-activedirectory-for-developers/.
+
+
+
+run
+ podman run -it --rm --env-file ./config.env  -p 1636:636 -p 1389:389 --hostname ad --name ad ad
+
+ hostname used to generate certificate
