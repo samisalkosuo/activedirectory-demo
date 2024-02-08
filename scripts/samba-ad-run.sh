@@ -11,6 +11,10 @@ error () {
     exit -1
 }
 
+#set environment variables
+python3 generate-env-file.py
+source config.env
+
 if [ "$SAMBA_DOMAIN" = "" ]; then
   error "SAMBA_DOMAIN not set."
 fi 
@@ -42,15 +46,46 @@ samba-tool domain provision\
 
 SAMBA_CONFIG_FILE=/var/lib/samba/private/smb.conf
 
-mv /etc/samba/smb.conf $SAMBA_CONFIG_FILE
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+
+#copy smb.confg and remove existing dns forwarder entry
+cat /etc/samba/smb.conf |grep -v "dns forwarder" >$SAMBA_CONFIG_FILE
+#mv /etc/samba/smb.conf $SAMBA_CONFIG_FILE
  
-sed -i s@\\[global\\]@\\[global\\]\\nallow\ dns\ updates\ =\ nonsecure@g $SAMBA_CONFIG_FILE
+#sed -i s@\\[global\\]@\\[global\\]\\nallow\ dns\ updates\ =\ nonsecure@g $SAMBA_CONFIG_FILE
+sed -i s@\\[global\\]@\\[global\\]\\nallow\ dns\ updates\ =\ disabled@g $SAMBA_CONFIG_FILE
 sed -i s@\\[global\\]@\\[global\\]\\ndns\ forwarder\ =\ 8.8.8.8@g $SAMBA_CONFIG_FILE
+#disable anonymous bind
+if [ "$SAMBA_ALLOW_ANONYMOUS_BIND" = "false" ]; then
+  sed -i s@\\[global\\]@\\[global\\]\\nrestrict\ anonymous\ =\ 2@g $SAMBA_CONFIG_FILE
+fi 
+
+#add TLS config
+if [ "$TLS_SAN" != "" ]; then
+  if [ "$TLS_IP" != "" ]; then
+    tls_ip="-I $TLS_IP"
+  else
+    tls_ip=""
+  fi
+  ./create-certificate.sh -c "Samba AD Demo" -f tls $tls_ip ad.$SAMBA_DOMAIN $TLS_SAN
+  mv tls.key tls.crt ca.crt /etc/samba/tls/
+  #exit 1
+fi
+
+#if tls.key exists, configure TLS
+#otherwise self-signed certificate is created
+if [[ -f "/etc/samba/tls/tls.crt" ]] && [[ -f "/etc/samba/tls/tls.key" ]] && [[ -f "/etc/samba/tls/ca.crt" ]]; then
+  chmod -R 600 /etc/samba/tls/
+  sed -i s@\\[global\\]@\\[global\\]\\ntls\ enabled\ =\ yes@g $SAMBA_CONFIG_FILE
+  sed -i s@\\[global\\]@\\[global\\]\\ntls\ keyfile\ =\ /etc/samba/tls/tls.key@g $SAMBA_CONFIG_FILE
+  sed -i s@\\[global\\]@\\[global\\]\\ntls\ certfile\ =\ /etc/samba/tls/tls.crt@g $SAMBA_CONFIG_FILE
+  sed -i s@\\[global\\]@\\[global\\]\\ntls\ cafile\ =\ /etc/samba/tls/ca.crt@g $SAMBA_CONFIG_FILE
+fi
 
 info "Provisioning domain controller...done."
- 
+
 #start samba as foreground daemon
-samba -D -s /var/lib/samba/private/smb.conf
+samba -D -s $SAMBA_CONFIG_FILE
 
 info "Configuring Samba Active Directory..."
 
@@ -60,9 +95,8 @@ samba-tool domain passwordsettings set --complexity=off
 #Initialize AD
 python3 samba-ad-setup.py
 
-samba-tool group add testgroup2
-
 info "Configuring Samba Active Directory...done."
+
 
 info "Starting Samba Active Directory...done."
 
@@ -78,7 +112,6 @@ function ctrl_c {
 }
 
 info "Press [CTRL+C] to stop."
-
 while true
 do
     if [ "$SAMBA_PRINT_LOG" = "true" ]; then

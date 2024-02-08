@@ -1,12 +1,47 @@
-# samba-ad
+# Active Directory demo
+:toc: left
+:toc-title: Table of Contents
 
 Active Directory using Samba for demo/test purposes.
 
 Inspired and based on https://schneide.blog/2022/06/27/running-a-containerized-activedirectory-for-developers/.
 
+Inspired also on https://github.com/samisalkosuo/openldap-docker.
+
+## Use case
+
+TODO
+
+## Usage
+
+* Build 
+
+```
+podman build -t ad-demo .
+```
+
+* Run and generate default self-signed certificate. hostname is used to generate certificate.
+
+```
+podman run -it --rm -p 1636:636 -p 1389:389 --hostname ad --name ad ad-demo
+```
+
+* Run and generate certificate for given host(s)/IP(s).
+
+```
+podman run -it --rm -p 1636:636 -p 1389:389 --hostname ad -e TLS_SAN="localhost ad-demo.sirius.com ad.example.org" -e TLS_IP="127.0.0.1 localhost" --name ad ad-demo
+```
 
 
-run
- podman run -it --rm --env-file ./config.env  -p 1636:636 -p 1389:389 --hostname ad --name ad ad
 
- hostname used to generate certificate
+
+ 
+
+## LDAP connection and filters
+
+## Groups and users
+
+## Create your own demo image
+
+## Certificate
+
