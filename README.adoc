@@ -4,9 +4,9 @@
 
 Active Directory using Samba for demo/test purposes.
 
-Inspired and based on https://schneide.blog/2022/06/27/running-a-containerized-activedirectory-for-developers/.
+Inspired by and based on https://schneide.blog/2022/06/27/running-a-containerized-activedirectory-for-developers/.
 
-Inspired also on https://github.com/samisalkosuo/openldap-docker.
+Inspired also by https://github.com/samisalkosuo/openldap-docker.
 
 ## Use case
 
