@@ -14,34 +14,36 @@ TODO
 
 ## Usage
 
+* Run and generate default self-signed certificate. hostname is used to generate certificate.
+
+```
+podman run -it --rm -p 1636:636 -p 1389:389 --hostname ad --name ad kazhar/activedirectory-demo
+```
+
+* Run and generate certificate for given host(s)/IP(s).
+
+```
+podman run -it --rm -p 1636:636 --hostname ad -e TLS_SAN="localhost ad-demo.sirius.com ad.example.org" -e TLS_IP="127.0.0.1" --name ad kazhar/activedirectory-demo
+```
+ 
+
+## LDAP connection and filters
+
+TODO
+
+## Groups and users
+
+TODO
+
+## Create your own demo image
+
 * Build 
 
 ```
 podman build -t ad-demo .
 ```
 
-* Run and generate default self-signed certificate. hostname is used to generate certificate.
-
-```
-podman run -it --rm -p 1636:636 -p 1389:389 --hostname ad --name ad ad-demo
-```
-
-* Run and generate certificate for given host(s)/IP(s).
-
-```
-podman run -it --rm -p 1636:636 -p 1389:389 --hostname ad -e TLS_SAN="localhost ad-demo.sirius.com ad.example.org" -e TLS_IP="127.0.0.1 localhost" --name ad ad-demo
-```
-
-
-
-
- 
-
-## LDAP connection and filters
-
-## Groups and users
-
-## Create your own demo image
 
 ## Certificate
 
+TODO
