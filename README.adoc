@@ -10,7 +10,7 @@ Inspired also by https://github.com/samisalkosuo/openldap-docker.
 
 ## Use case
 
-TODO
+Occasionally I have a need to have LDAP (Active Directory) server with groups and users. That’s why this image exists. No installations, no setup, just run and use.
 
 ## Usage
 
@@ -25,25 +25,190 @@ podman run -it --rm -p 1636:636 -p 1389:389 --hostname ad --name ad kazhar/activ
 ```
 podman run -it --rm -p 1636:636 --hostname ad -e TLS_SAN="localhost ad-demo.sirius.com ad.example.org" -e TLS_IP="127.0.0.1" --name ad kazhar/activedirectory-demo
 ```
- 
 
 ## LDAP connection and filters
 
-TODO
+Some applications ask for LDAP connection and filters. If using the default Active Directory demo image, here are the settings and filters that should work.
+
+.Sample LDAP connection and filters
+|===
+|Setting |Value
+
+|URL
+|`ldap://server.ip:389`
+
+|Base DN
+|`dc=sirius,dc=com`
+
+|Bind DN, admin or domain search user
+|`Administrator@sirius.com`
+
+|Admin password
+|`S4m3aPassw@rd`
+
+|User filter
+|`(&(sAMAccountName=%v)(objectcategory=user))`
+
+|Group filter
+|`(&(cn=%v)(objectcategory=group))`
+
+|Group membership search filter
+|`(&(cn=%v)(objectcategory=group))`
+
+|Group member ID map 
+|`memberOf:member`
+
+|LDAP group name attribute
+|`*:cn`
+
+|LDAP group display name
+|`cn`
+
+|===
+
 
 ## Groups and users
 
-TODO
+Groups and users are specified in link:scripts/config.ini[scripts/config.ini]-file.
+
+One group is:
+
+- `cn=admin,cn=users,dc=sirius,dc=com`
+
+And one user in that group is :
+
+- `uid=kdoyle,cn=users,dc=sirius,dc=com`
+
+The default password for users is `passw0rd`. Another password can be set in link:scripts/config.ini[scripts/config.ini].
+
+=== Default users and groups
+
+.Group: admin
+|===
+|Name |UID |Default password
+
+|Kiara Doyle
+|`kdoyle`
+|`passw0rd`
+
+|Zac Fraser
+|`zfraser`
+|`passw0rd`
+
+|Andre Shaw
+|`ashaw`
+|`passw0rd`
+
+|Daniella Wells
+|`dwells`
+|`passw0rd`
+
+|===
+
+.Group: research
+|===
+|Name|UID |Default password
+
+|Olivia Berry
+|`oberry`
+|`passw0rd`
+
+|Oscar Davis
+|`odavis`
+|`passw0rd`
+
+|Amelia Lawson
+|`alawson`
+|`passw0rd`
+
+|Jonah Stone
+|`jstone`
+|`passw0rd`
+
+|===
+
+.Group: operations
+|===
+|Name|UID |Default password
+
+|Tom Foster
+|`tfoster`
+|`passw0rd`
+
+|Cara Hawkins
+|`chawkins`
+|`passw0rd`
+
+|Natalia Matthews
+|`nmatthews`
+|`passw0rd`
+
+|George Watts
+|`gwatts`
+|`passw0rd`
+
+|===
+
+.Group: marketing
+|===
+|Name|UID |Default password
+
+|Hilary Banks
+|`hbanks`
+|`hilarybanks`
+
+|Mallory Keaton
+|`mkeaton`
+|`mallkeat`
+
+|Ed Norton
+|`enorton`
+|`pw8chars`
+
+|Michael Scott
+|`mscott`
+|`passw0rd`
+
+|===
+
+=== Add users and groups
+
+When running the container, you can add your own groups and users using environment variable.
+
+.Add users environment variable
+|===
+|Name |Example value
+
+|USERS
+|`group1:user1,user2,user3;group2:user1`
+
+|===
+
+Sample command:
+
+```
+podman run -it --rm -p 1636:636 --hostname ad -e USERS="staff:user1,user2,user3,user4,user5" --name ad kazhar/activedirectory-demo
+```
+
 
 ## Create your own demo image
 
-* Build 
+* Modify link:scripts/config.ini[scripts/config.ini]-file.
+* Build
 
 ```
 podman build -t ad-demo .
 ```
 
-
 ## Certificate
 
-TODO
+Self-signed certificate is automatically generated. `TLS_SAN` and `TLS_IP` environment variables are used to generate certficate with my CA (https://github.com/samisalkosuo/certificate-authority).
+
+If you want to use your own certificate, you need to copy certificate files to container when building container. See link:Dockerfile[Dockerfile].
+
+Certificate file paths/names must be: 
+```
+/etc/samba/tls/ca.crt
+/etc/samba/tls/tls.crt
+/etc/samba/tls/tls.key
+```
