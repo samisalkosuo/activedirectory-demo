@@ -25,13 +25,13 @@ config.read('config.ini')
 
 #read global settings
 configuration=config['globalsettings']
-
-defaultPassword = configuration['defaultPassword']
-adminPassword = configuration['adminPassword']
 domain = configuration['domain']
 organizationName = configuration['organization']
 allowAnonymousBind = configuration['allowAnonymousBind']
 printSambaLogs = configuration['printSambaLogs']
+adminPassword = configuration['adminPassword']
+#default password from configuration if environment variable does not exist
+defaultPassword = os.environ.get("DEFAULT_PASSWORD", configuration['defaultPassword'])
 
 #generate groups and users based on config
 for sectionName in config.sections():
