@@ -4,7 +4,7 @@ import getpass
 import ldb
 import configparser
 import random
-import sys
+import sys, os
 
 from samba.auth import system_session
 from samba.credentials import Credentials
@@ -58,6 +58,33 @@ for sectionName in config.sections():
             print(str(e))
             sys.exit(1)
 
+#READ env variable to create groups and users
+try:
+    #USERS format:
+    #GROUPNAME:USERNAME,USERNAME;GROUPNAME:USERNAME;USERNAME,USERNAME
+    users = os.environ['USERS']
+    groups = users.split(";")
+    for group in groups:
+        if group.find(":") == -1:
+            print(f"WARN: No group specified ({group}). Ignoring.")
+            continue
+        groupConfig = group.split(":")
+        groupName = groupConfig[0]
+        try:
+            samdb.newgroup(groupname=groupName)
+        except Exception as e:
+            print(f"WARN: {e}. Ignoring.")
+        users = groupConfig[1].split(",")
+        for uid in users:
+            name = uid.capitalize()
+            try:
+                samdb.newuser(username=uid,givenname=name, surname=name,password=defaultPassword)
+            except Exception as e:
+                print(f"WARN: {e}. Ignoring.")
+            samdb.add_remove_group_members(groupname=groupName, members=[uid], add_members_operation=True)
+        
+except Exception as e:
+    print(e)
 
 # samdb.create_ou('OU=marketing,DC=sirius,DC=com')
 # samdb.create_ou('OU=Users,OU=marketing,DC=sirius,DC=com')
