@@ -26,16 +26,64 @@ podman run -it --rm -p 1636:636 -p 1389:389 --hostname ad --name ad kazhar/activ
 podman run -it --rm -p 1636:636 --hostname ad -e TLS_SAN="localhost ad-demo.sirius.com ad.example.org" -e TLS_IP="127.0.0.1" --name ad kazhar/activedirectory-demo
 ```
 
+* Run and set your admin password and user password.
+
+```
+podman run -it --rm -p 1636:636 --hostname ad -e SAMBA_ADMIN_PASSWORD="C0mpleXp@ssw0rd" -e DEFAULT_PASSWORD=yeahyeah --name ad kazhar/activedirectory-demo
+```
+
+* When running the container, you can add your own groups and users using environment variable.
+
+```
+podman run -it --rm -p 1636:636 --hostname ad -e USERS="staff:user1,user2,user3,user4,user5" --name ad kazhar/activedirectory-demo
+```
+
+### Environment variables
+
+.Container environment variables and default values
+|===
+|Name |Default value|Description
+
+|DEFAULT_PASSWORD
+|`passw0rd`
+|Default password for all user.
+
+|SAMBA_ADMIN_PASSWORD
+|`S4m3aPassw@rd`
+|Samba/AD administrator password.
+
+|SAMBA_DOMAIN
+|`sirius.com`
+|Samba/AD domain.
+
+|SAMBA_PRINT_LOG
+|`false`
+|Print Samba logs to system out.
+
+|SAMBA_ALLOW_ANONYMOUS_BIND
+|`false`
+|Allow anonymous bind to Samba/AD.
+
+|USERS
+|None
+|Add groups/users. Value is in format: `group1:user1,user2,user3;group2:user1`.
+
+
+
+|===
+
+
+
 ## LDAP connection and filters
 
 Some applications ask for LDAP connection and filters. If using the default Active Directory demo image, here are the settings and filters that should work.
 
-.Sample LDAP connection and filters
+.LDAP connection settings
 |===
 |Setting |Value
 
 |URL
-|`ldap://server.ip:389`
+|`ldaps://server.ip:1686`
 
 |Base DN
 |`dc=sirius,dc=com`
@@ -170,26 +218,6 @@ The default password for users is `passw0rd`. Another password can be set in lin
 |`passw0rd`
 
 |===
-
-=== Add users and groups
-
-When running the container, you can add your own groups and users using environment variable.
-
-.Add users environment variable
-|===
-|Name |Example value
-
-|USERS
-|`group1:user1,user2,user3;group2:user1`
-
-|===
-
-Sample command:
-
-```
-podman run -it --rm -p 1636:636 --hostname ad -e USERS="staff:user1,user2,user3,user4,user5" --name ad kazhar/activedirectory-demo
-```
-
 
 ## Create your own demo image
 
