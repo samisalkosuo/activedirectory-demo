@@ -125,7 +125,7 @@ One group is:
 
 And one user in that group is :
 
-- `uid=kdoyle,cn=users,dc=sirius,dc=com`
+- `cn=kdoyle,cn=users,dc=sirius,dc=com`
 
 The default password for users is `passw0rd`. Another password can be set in link:scripts/config.ini[scripts/config.ini].
 

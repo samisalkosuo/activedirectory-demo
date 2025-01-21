@@ -62,6 +62,7 @@ for sectionName in config.sections():
 try:
     #USERS format:
     #GROUPNAME:USERNAME,USERNAME;GROUPNAME:USERNAME;USERNAME,USERNAME
+    #TODO: add option to add password to user, add firstname and lastname
     users = os.environ['USERS']
     groups = users.split(";")
     for group in groups:
