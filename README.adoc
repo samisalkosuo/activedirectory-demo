@@ -10,7 +10,7 @@ Inspired also by https://github.com/samisalkosuo/openldap-docker.
 
 ## Use case
 
-Occasionally I have a need to have LDAP (Active Directory) server with groups and users. That’s why this image exists. No installations, no setup, just run and use.
+Occasionally I have a need to have LDAP (Active Directory) server with groups and users. That’s why this container exists. No installations, no setup, just run and use.
 
 ## Usage
 
@@ -32,7 +32,7 @@ podman run -it --rm -p 1636:636 --hostname ad -e TLS_SAN="localhost ad-demo.siri
 podman run -it --rm -p 1636:636 --hostname ad -e SAMBA_ADMIN_PASSWORD="C0mpleXp@ssw0rd" -e DEFAULT_PASSWORD=yeahyeah --name ad kazhar/activedirectory-demo
 ```
 
-* When running the container, you can add your own groups and users using environment variable.
+* When running the container, you can add your own groups and users using `USERS` environment variable.
 
 ```
 podman run -it --rm -p 1636:636 --hostname ad -e USERS="staff:user1,user2,user3,user4,user5" --name ad kazhar/activedirectory-demo
@@ -46,10 +46,10 @@ podman run -it --rm -p 1636:636 --hostname ad -e USERS="staff:user1,user2,user3,
 
 |DEFAULT_PASSWORD
 |`passw0rd`
-|Default password for all user.
+|Default password for all users.
 
 |SAMBA_ADMIN_PASSWORD
-|`S4m3aPassw@rd`
+|`STRONGpassw0rd`
 |Samba/AD administrator password.
 
 |SAMBA_DOMAIN
@@ -66,13 +66,28 @@ podman run -it --rm -p 1636:636 --hostname ad -e USERS="staff:user1,user2,user3,
 
 |USERS
 |None
-|Add groups/users. Value is in format: `group1:user1,user2,user3;group2:user1`.
-
-
+|Add groups and users. See the next section.
 
 |===
 
+## USERS-environment variable
 
+Users and group are added using `USERS`-environment variable.
+
+All variables that start with `USERS`, like `USERS_STAFF`,`USERSBLD2` and so on, are used to create groups and users.
+
+Environment variable value can be one of:
+
+* `USERNAME`, user with username as id and uses default password.
+** Example: `USERS_GROUP1="group1:user1,user2,user3"`
+* `USERNAME=PASSWORD`, user with username as id and uses given password.
+** Example: `USERS_GROUP2="group2:user1=pwd1,user2=pwd2,user3=user3pwd"`
+* `FIRSTNAME LASTNAME`, user id is generated from first name and last name so that it is first letter of first name combined with last name. Default password is used.
+** Example: `USERS_GROUP3="Han Solo,Leia Organa,Ahsoka Tano"`.
+** User IDs generated are: `hsolo, lorgana and atano`
+* `FIRSTNAME LASTNAME=PASSWORD`, user id is generated from first name and last name so that it is first letter of first name combined with last name. Password is given.
+** Example: `USERS_GROUP3="Mara Jade=thehand,Kyle Katarn=jedirebel,Sabine Wren=tobejedi"`
+** User IDs generated are: `mjade, kkatarn and swren`.
 
 ## LDAP connection and filters
 
@@ -92,7 +107,7 @@ Some applications ask for LDAP connection and filters. If using the default Acti
 |`Administrator@sirius.com`
 
 |Admin password
-|`S4m3aPassw@rd`
+|`STRONGpassw0rd`
 
 |User filter
 |`(&(sAMAccountName=%v)(objectcategory=user))`
@@ -127,7 +142,7 @@ And one user in that group is :
 
 - `cn=kdoyle,cn=users,dc=sirius,dc=com`
 
-The default password for users is `passw0rd`. Another password can be set in link:scripts/config.ini[scripts/config.ini].
+The default password for users is `passw0rd`. Another password can be set in using `DEFAULT_USER_PASSWORD` environment variable.
 
 === Default users and groups
 
@@ -218,15 +233,6 @@ The default password for users is `passw0rd`. Another password can be set in lin
 |`passw0rd`
 
 |===
-
-## Create your own demo image
-
-* Modify link:scripts/config.ini[scripts/config.ini]-file.
-* Build
-
-```
-podman build -t ad-demo .
-```
 
 ## Certificate
 

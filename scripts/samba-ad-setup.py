@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import getpass
 import ldb
-import configparser
 import random
 import sys, os
 
@@ -19,52 +18,35 @@ creds = Credentials()
 creds.guess(lp)
 samdb = SamDB(url='/var/lib/samba/private/sam.ldb', session_info=system_session(),credentials=creds, lp=lp)
 
-#read config
-config = configparser.ConfigParser(strict=False)
-config.read('config.ini')
+defaultPassword = os.environ["DEFAULT_PASSWORD"]
 
-#read global settings
-configuration=config['globalsettings']
-domain = configuration['domain']
-organizationName = configuration['organization']
-allowAnonymousBind = configuration['allowAnonymousBind']
-printSambaLogs = configuration['printSambaLogs']
-adminPassword = configuration['adminPassword']
-#default password from configuration if environment variable does not exist
-defaultPassword = os.environ.get("DEFAULT_PASSWORD", configuration['defaultPassword'])
+def sortDictionary(dictionary):
+    keyList = list(dictionary.keys())
+    keyList.sort()
+    # Sorted Dictionary
+    return {i: dictionary[i] for i in keyList}
 
-#generate groups and users based on config
-for sectionName in config.sections():
-    if sectionName == "globalsettings":
-        continue
-    groupName = sectionName
-    samdb.newgroup(groupname=groupName)
-    groupConfig = config[groupName]
-    #create each user
-    for user in groupConfig:
-        try:
-            userName = user.split(" ")
-            firstName = userName[0].capitalize()
-            lastName = userName[1].capitalize()
-            uid = firstName.lower()[0:1] + lastName.lower()
-            pwd = groupConfig[user]
-            if pwd == None or pwd == "":
-                pwd = defaultPassword
-            #print("uid: %s, defaultPassword: %s " % (uid,defaultPassword))
-            samdb.newuser(username=uid,givenname=firstName, surname=lastName,password=pwd)
-            samdb.add_remove_group_members(groupname=groupName, members=[uid], add_members_operation=True)
-        except Exception as e:
-            print("ERROR when creating user:"+user)
-            print(str(e))
-            sys.exit(1)
-
-#READ env variable to create groups and users
-try:
+def createUsersAndGroupFromEnv():
+    #READ env variable to create groups and users
     #USERS format:
-    #GROUPNAME:USERNAME,USERNAME;GROUPNAME:USERNAME;USERNAME,USERNAME
-    #TODO: add option to add password to user, add firstname and lastname
-    users = os.environ['USERS']
-    groups = users.split(";")
+    #GROUPNAME:<USERNAME>,<USERNAME>;GROUPNAME:<USERNAME>;<USERNAME>,<USERNAME>
+    #where username is one of: USERNAME, FIRST LAST,USERNAME=PWD,FIRST LAST=PWD
+    #if FIRST LAST then username is first letter of first name and last name
+
+    #read environment variables to dictionary and sort them
+    environmentVariables = dict()
+    for k, v in os.environ.items():
+        environmentVariables[k] = v
+    environmentVariables = sortDictionary(environmentVariables)
+    
+    for name, value in environmentVariables.items():
+        if name.startswith("USERS"):
+            print(f"Creating users from env var {name}...")
+            createUsersAndGroup(value)
+            print(f"Creating users from env var {name}...done.")
+        
+def createUsersAndGroup(envVarValue):    
+    groups = envVarValue.split(";")
     for group in groups:
         if group.find(":") == -1:
             print(f"WARN: No group specified ({group}). Ignoring.")
@@ -73,19 +55,34 @@ try:
         groupName = groupConfig[0]
         try:
             samdb.newgroup(groupname=groupName)
+            print(f"Created group: {groupName}")
         except Exception as e:
             print(f"WARN: {e}. Ignoring.")
         users = groupConfig[1].split(",")
         for uid in users:
-            name = uid.capitalize()
+            uid = uid.strip()
+            password = defaultPassword
+            #check pwd
+            if uid.find("=") > -1:
+                uname = uid.split("=")
+                uid = uname[0]
+                password = uname[1]
+            #check first name and last name
+            if uid.find(" ") > -1:
+                uname = uid.split(" ")
+                firstName = uname[0].capitalize()
+                lastName = uname[1].capitalize()
+                uid = (firstName[0] + lastName).lower()
+            else:
+                firstName = uid.capitalize()
+                lastName = uid.capitalize()
             try:
-                samdb.newuser(username=uid,givenname=name, surname=name,password=defaultPassword)
+                samdb.newuser(username=uid,givenname=firstName, surname=lastName,password=password)
+                samdb.add_remove_group_members(groupname=groupName, members=[uid], add_members_operation=True)
+                print(f"Added user - uid: {uid}, firstName: {firstName}, lastName: {lastName}")
             except Exception as e:
                 print(f"WARN: {e}. Ignoring.")
-            samdb.add_remove_group_members(groupname=groupName, members=[uid], add_members_operation=True)
-        
-except Exception as e:
-    print(e)
+            
 
 # samdb.create_ou('OU=marketing,DC=sirius,DC=com')
 # samdb.create_ou('OU=Users,OU=marketing,DC=sirius,DC=com')
@@ -101,3 +98,8 @@ except Exception as e:
 # samdb.rename('CN=dwells,CN=Users,DC=sirius,DC=com','CN=dwells,OU=Users,OU=admin,DC=sirius,DC=com')
 
 # #samdb.add_remove_group_members(groupname='admin', members=['dwells'], add_members_operation=True)
+
+# Using the special variable 
+# __name__
+if __name__=="__main__":
+    createUsersAndGroupFromEnv()

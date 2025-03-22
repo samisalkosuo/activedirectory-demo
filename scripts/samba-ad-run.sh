@@ -11,18 +11,6 @@ error () {
     exit -1
 }
 
-#set environment variables
-python3 generate-env-file.py
-source config.env
-
-if [ "$SAMBA_DOMAIN" = "" ]; then
-  error "SAMBA_DOMAIN not set."
-fi 
-
-if [ "$SAMBA_ADMIN_PASSWORD" = "" ]; then
-  error "SAMBA_ADMIN_PASSWORD not set."
-fi 
-
 info "Starting Samba Active Directory..."
 
 info "Provisioning domain controller..."
@@ -67,7 +55,8 @@ if [ "$TLS_SAN" != "" ]; then
   else
     tls_ip=""
   fi
-  ./create-certificate.sh -c "Samba AD Demo" -f tls $tls_ip ad.$SAMBA_DOMAIN $TLS_SAN
+  ./create-certificate.sh -c "Samba AD Demo" -f tls ${tls_ip} ${HOSTNAME}.${SAMBA_DOMAIN} ${TLS_SAN}
+  mkdir -p /etc/samba/tls/
   mv tls.key tls.crt ca.crt /etc/samba/tls/
   #exit 1
 fi
@@ -97,7 +86,6 @@ python3 samba-ad-setup.py
 
 info "Configuring Samba Active Directory...done."
 
-
 info "Starting Samba Active Directory...done."
 
 # trap ctrl-c and call ctrl_c()
@@ -112,6 +100,7 @@ function ctrl_c {
 }
 
 info "Press [CTRL+C] to stop."
+
 while true
 do
     if [ "$SAMBA_PRINT_LOG" = "true" ]; then
