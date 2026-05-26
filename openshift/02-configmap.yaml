@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: activedirectory-demo-config
+  namespace: ad
+  labels:
+    app.kubernetes.io/name: activedirectory-demo
+    app.kubernetes.io/component: directory
+data:
+  SAMBA_DOMAIN: "sirius.com"
+  SAMBA_PRINT_LOG: "false"
+  SAMBA_ALLOW_ANONYMOUS_BIND: "false"
+  DEFAULT_PASSWORD: "passw0rd"
+  TLS_SAN: "activedirectory-demo activedirectory-demo.ad.svc.cluster.local"
+  USERS___ADMIN: "admin:Kiara Doyle,Zac Fraser,Andre Shaw,Daniella Wells"
+  USERS___RESEARCH: "research:Olivia Berry,Oscar Davis,Amelia Lawson,Jonah Stone"
+  USERS___OPERATIONS: "operations:Tom Foster,Cara Hawkins,Natalia Matthews,George Watts"
+  USERS___MARKETING: "marketing:Hilary Banks=hilarybanks,Mallory Keaton=mallkeat,Ed Norton=pw8chars,Michael Scott"
+  USERS___TEST: "testers:tester1=tester1,tester2,tester3"
+  USERS___STAGG: "staff:user1,user2,user3"
+
+# Made with Bob

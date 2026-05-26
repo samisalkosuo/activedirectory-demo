@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activedirectory-demo
+  namespace: ad
+  labels:
+    app.kubernetes.io/name: activedirectory-demo
+    app.kubernetes.io/component: directory
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: activedirectory-demo
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: activedirectory-demo
+        app.kubernetes.io/component: directory
+    spec:
+      serviceAccountName: activedirectory-demo-sa
+      serviceAccount: activedirectory-demo-sa
+      hostname: activedirectory
+      containers:
+        - name: activedirectory-demo
+          image: kazhar/activedirectory-demo:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            #user 999 is defined in postgres container
+#            fsGroup: 999
+            runAsUser: 0
+ #           runAsGroup: 999                  
+          envFrom:
+            - configMapRef:
+                name: activedirectory-demo-config
+            - secretRef:
+                name: activedirectory-demo-secret
+          ports:
+            - name: ldap
+              containerPort: 389
+              protocol: TCP
+            - name: ldaps
+              containerPort: 636
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+
+# Made with Bob
