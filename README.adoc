@@ -132,8 +132,6 @@ Some applications ask for LDAP connection and filters. If using the default Acti
 
 ## Groups and users
 
-Groups and users are specified in link:scripts/config.ini[scripts/config.ini]-file.
-
 One group is:
 
 - `cn=admin,cn=users,dc=sirius,dc=com`
@@ -236,7 +234,7 @@ The default password for users is `passw0rd`. Another password can be set in usi
 
 ## Certificate
 
-Self-signed certificate is automatically generated. `TLS_SAN` and `TLS_IP` environment variables are used to generate certficate with my CA (https://github.com/samisalkosuo/certificate-authority).
+Self-signed certificate is automatically generated. `TLS_SAN` and `TLS_IP` environment variables are used to generate certificate with my CA (https://github.com/samisalkosuo/certificate-authority).
 
 If you want to use your own certificate, you need to copy certificate files to container when building container. See link:Dockerfile[Dockerfile].
 
